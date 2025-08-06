@@ -1,0 +1,258 @@
+<!DOCTYPE html><!doctype html>
+
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prenses Accessorie</title>
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#fff0f5; }
+    header { background:pink; color:white; font-size:2rem; text-align:center; padding:1rem; font-weight:bold; position: sticky; top: 0; z-index: 100; }
+    nav { background:#ff69b4; padding:0.5rem 1rem; display:flex; justify-content:space-between; align-items:center; position: sticky; top: 3.5rem; z-index: 100; }
+    nav input[type="text"] { padding:0.4rem; border-radius:10px; border:none; width:60%; max-width:300px; }
+    nav button { background:white; border:none; color:#ff1493; font-weight:bold; padding:0.4rem 1rem; border-radius:20px; cursor:pointer; position:relative; }
+    nav button span { position:absolute; top:-8px; right:-8px; background:red; color:white; border-radius:50%; width:20px; height:20px; font-size:0.8rem; line-height:20px; transition:transform 0.2s ease; }
+    main { padding:1rem; max-width:900px; margin:auto; min-height: 80vh; }
+    .products { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem; }
+    .product-card { background:#ffc0d6; border-radius:10px; padding:1rem; cursor:pointer; box-shadow:0 0 10px #ff69b4; text-align:center; transition: transform 0.2s ease; }
+    .product-card:hover { transform: scale(1.05); }
+    .product-card img { width:100%; border-radius:10px; height:180px; object-fit:cover; }
+    .product-card h3 { margin:0.5rem 0 0; color:#900048; }
+    .product-card p { font-size:0.9rem; color:#720026; margin-bottom: 0.2rem; }
+    .product-price { font-weight:bold; color:#d80073; }
+    .product-detail, .cart, .checkout-form, .thank-you { background:#ffc0d6; border-radius:15px; padding:1rem; margin-top:1rem; box-shadow:0 0 15px #ff69b4; display:none; text-align:center; }
+    .product-detail img { width:100%; border-radius:15px; max-height:300px; object-fit:cover; }
+    .product-detail h2 { color:#900048; margin-top:0.5rem; }
+    .product-detail p { color:#720026; margin:0.5rem 0; }
+    .product-detail button, .btn-checkout, .checkout-form button, #btn-back-to-cart, #btn-back-to-list-from-cart, #btn-back-to-list {
+      margin-top:1rem; background:#d80073; border:none; color:white; padding:0.6rem 1.2rem; border-radius:30px; cursor:pointer; font-weight:bold; display:inline-block;
+    }
+    .cart h2, .checkout-form h2, .thank-you h2 { text-align:center; color:#900048; }
+    .cart-list { list-style:none; padding:0; margin:0; max-height: 300px; overflow-y: auto; }
+    .cart-list li { border-bottom:1px solid #ff5a9f; padding:0.6rem 0; font-weight:bold; color:#720026; display:flex; justify-content:space-between; align-items:center; }
+    .cart-list li button { background:#900048; border:none; color:white; padding:0.3rem 0.6rem; border-radius:10px; cursor:pointer; }
+    .total-info { font-weight:bold; color:#900048; margin-top:1rem; text-align:right; }
+    .thank-you { display:none; font-size:1.3rem; color:#900048; }
+    .thank-you img { width:150px; margin-top:1rem; }
+  </style>
+</head>
+<body>
+  <header>🎀 Prenses Accessorie 🎀</header>
+  <nav>
+    <input type="text" id="search" placeholder="Ürün Ara...">
+    <button id="btn-cart">Sepetim <span id="cart-count">0</span></button>
+  </nav>
+  <main>
+    <div class="products" id="product-list"></div>
+    <div class="product-detail" id="product-detail"></div>
+    <div class="cart" id="cart"></div>
+    <div class="checkout-form" id="checkout-form"></div>
+    <div class="thank-you" id="thank-you">
+      <h2>💖 Siparişiniz Alındı! Teşekkür ederiz 💖</h2>
+      <img src="https://i.imgur.com/GnyDvKN.png" alt="teşekkürler">
+    </div>
+  </main>
+  <script>
+    // JavaScript kodları bir sonraki adımda eklenecek
+  </script><script>
+const products = [
+  {id:1, name:"Altınlı Bilezik", desc:"Doğanın zarif detayıyla şıklığınızı tamamlayın.", price:300, img:"https://i.imgur.com/nk4fFzq.jpg"},
+  {id:2, name:"Mavi Bileklik", desc:"Zarif tasarımıyla her stile uyum sağlar.", price:300, img:"https://i.imgur.com/ykHvhyr.jpg"},
+  {id:3, name:"Siyah Bileklik", desc:"Gecenin gizemli güzelliğini bileğinizde taşıyın.", price:300, img:"https://i.imgur.com/kQFwWCJ.jpg"}
+];
+
+let cart = [];
+let currentProduct = null;
+
+// HTML Elemanları
+const productListEl = document.getElementById('product-list');
+const productDetailEl = document.getElementById('product-detail');
+const cartEl = document.getElementById('cart');
+const checkoutFormEl = document.getElementById('checkout-form');
+const thankYouEl = document.getElementById('thank-you');
+const cartCountEl = document.getElementById('cart-count');
+const searchInput = document.getElementById('search');
+
+// Ürünleri listele
+function renderProducts(filter = '') {
+  productListEl.innerHTML = '';
+  const filtered = products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
+  filtered.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'product-card';
+    div.innerHTML = `
+      <img src="${p.img}" alt="${p.name}" />
+      <h3>${p.name}</h3>
+      <p>${p.desc}</p>
+      <div class="product-price">${p.price} TL</div>
+    `;
+    div.onclick = () => showProductDetail(p);
+    productListEl.appendChild(div);
+  });
+}
+
+// Ürün detayını göster
+function showProductDetail(p) {
+  currentProduct = p;
+  productDetailEl.innerHTML = `
+    <img src="${p.img}" alt="${p.name}">
+    <h2>${p.name}</h2>
+    <p>${p.desc}</p>
+    <p class="product-price">${p.price} TL</p>
+    <button onclick="addToCart()">Sepete Ekle</button>
+    <button id="btn-back-to-list">Geri Dön</button>
+  `;
+  productListEl.style.display = 'none';
+  cartEl.style.display = 'none';
+  checkoutFormEl.style.display = 'none';
+  thankYouEl.style.display = 'none';
+  productDetailEl.style.display = 'block';
+
+  document.getElementById('btn-back-to-list').onclick = () => {
+    productDetailEl.style.display = 'none';
+    renderProducts(searchInput.value);
+    productListEl.style.display = 'grid';
+  };
+}
+
+// Sepete ekle
+function addToCart() {
+  if (!currentProduct) return;
+  const found = cart.find(item => item.id === currentProduct.id);
+  if (found) {
+    found.quantity++;
+  } else {
+    cart.push({...currentProduct, quantity: 1});
+  }
+  updateCartCount();
+  alert(`${currentProduct.name} sepete eklendi!`);
+}
+
+// Sepet sayısını güncelle
+function updateCartCount() {
+  const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+  cartCountEl.textContent = count;
+  cartCountEl.style.transform = 'scale(1.3)';
+  setTimeout(() => cartCountEl.style.transform = 'scale(1)', 300);
+}
+
+// Sepeti göster
+document.getElementById('btn-cart').onclick = () => {
+  if (cart.length === 0) return alert('Sepetiniz boş!');
+  renderCart();
+  productListEl.style.display = 'none';
+  productDetailEl.style.display = 'none';
+  checkoutFormEl.style.display = 'none';
+  thankYouEl.style.display = 'none';
+  cartEl.style.display = 'block';
+};
+
+// Sepet detaylarını göster
+function renderCart() {
+  cartEl.innerHTML = `
+    <h2>🛒 Sepetiniz</h2>
+    <ul class="cart-list">
+      ${cart.map(item => `
+        <li>
+          ${item.name} x${item.quantity} - ${item.price * item.quantity} TL
+          <button onclick="removeFromCart(${item.id})">Sil</button>
+        </li>
+      `).join('')}
+    </ul>
+    <p class="total-info">Toplam (Kargo +50 TL): ${getTotalPrice()} TL</p>
+    <button class="btn-checkout" onclick="goToCheckout()">Ödemeye Geç</button>
+    <button id="btn-back-to-list-from-cart">Alışverişe Devam Et</button>
+  `;
+
+  document.getElementById('btn-back-to-list-from-cart').onclick = () => {
+    cartEl.style.display = 'none';
+    renderProducts(searchInput.value);
+    productListEl.style.display = 'grid';
+  };
+}
+
+// Ürünü sepetten çıkar
+function removeFromCart(id) {
+  cart = cart.filter(item => item.id !== id);
+  updateCartCount();
+  if (cart.length === 0) {
+    alert('Sepet boşaldı.');
+    cartEl.style.display = 'none';
+    renderProducts(searchInput.value);
+    productListEl.style.display = 'grid';
+  } else {
+    renderCart();
+  }
+}
+
+// Toplam tutarı hesapla
+function getTotalPrice() {
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  return subtotal + 50;
+}
+
+// Ödeme formuna geç
+function goToCheckout() {
+  cartEl.style.display = 'none';
+  checkoutFormEl.style.display = 'block';
+  checkoutFormEl.innerHTML = `
+    <h2>📝 Sipariş Bilgileri</h2>
+    <form id="order-form" action="https://formspree.io/f/mzzvjwlg" method="POST">
+      <label>Ad Soyad*</label><input type="text" name="adsoyad" required>
+      <label>Adres*</label><input type="text" name="adres" required>
+      <label>Telefon*</label><input type="tel" name="telefon" required>
+      <label><input type="checkbox" name="kapida_odeme" id="kapida-odeme"> Kapıda Ödeme (+50 TL)</label>
+      <input type="hidden" name="siparis_detay" id="siparis-detay-input">
+      <p class="total-info" id="final-total">Toplam Tutar: ${getTotalPrice()} TL</p>
+      <button type="submit">Siparişi Gönder</button>
+    </form>
+    <button id="btn-back-to-cart">Sepete Geri Dön</button>
+  `;
+
+  document.getElementById('btn-back-to-cart').onclick = () => {
+    checkoutFormEl.style.display = 'none';
+    renderCart();
+    cartEl.style.display = 'block';
+  };
+
+  const kapidaOdeme = document.getElementById('kapida-odeme');
+  const finalTotalEl = document.getElementById('final-total');
+  kapidaOdeme.onchange = () => {
+    let total = getTotalPrice();
+    if (kapidaOdeme.checked) total += 50;
+    finalTotalEl.textContent = `Toplam Tutar: ${total} TL`;
+  };
+
+  document.getElementById('order-form').onsubmit = (e) => {
+    const siparisDetayInput = document.getElementById('siparis-detay-input');
+    const detay = cart.map(item => `${item.name} x${item.quantity} - ${item.price * item.quantity} TL`).join('\\n');
+    const kapida = kapidaOdeme.checked ? 'Evet (+50 TL)' : 'Hayır';
+    siparisDetayInput.value = detay + `\\nKargo: 50 TL\\nKapıda Ödeme: ${kapida}\\nToplam: ${finalTotalEl.textContent.split(':')[1].trim()}`;
+    cart = [];
+    updateCartCount();
+    setTimeout(() => {
+      checkoutFormEl.style.display = 'none';
+      thankYouEl.style.display = 'block';
+    }, 500);
+  };
+}
+
+// Arama kutusu
+searchInput.oninput = () => {
+  renderProducts(searchInput.value);
+};
+
+// İlk yükleme
+renderProducts();
+updateCartCount();
+</script>
+</body>
+</html>
+<html>
+<head>
+<title>New File</title>
+</head>
+<body>
+<h1>Hello World</h1>
+</body>
+</html>
